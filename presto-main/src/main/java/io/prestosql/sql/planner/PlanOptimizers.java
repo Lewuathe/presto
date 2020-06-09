@@ -144,6 +144,10 @@ import io.prestosql.sql.planner.iterative.rule.PushTopNIntoTableScan;
 import io.prestosql.sql.planner.iterative.rule.PushTopNThroughOuterJoin;
 import io.prestosql.sql.planner.iterative.rule.PushTopNThroughProject;
 import io.prestosql.sql.planner.iterative.rule.PushTopNThroughUnion;
+import io.prestosql.sql.planner.iterative.rule.PushdownFilterThroughRowNumber;
+import io.prestosql.sql.planner.iterative.rule.PushdownFilterThroughWindow;
+import io.prestosql.sql.planner.iterative.rule.PushdownLimitThroughRowNumber;
+import io.prestosql.sql.planner.iterative.rule.PushdownLimitThroughWindow;
 import io.prestosql.sql.planner.iterative.rule.RemoveAggregationInSemiJoin;
 import io.prestosql.sql.planner.iterative.rule.RemoveDuplicateConditions;
 import io.prestosql.sql.planner.iterative.rule.RemoveEmptyDelete;
@@ -164,6 +168,7 @@ import io.prestosql.sql.planner.iterative.rule.RemoveUnreferencedScalarApplyNode
 import io.prestosql.sql.planner.iterative.rule.RemoveUnreferencedScalarSubqueries;
 import io.prestosql.sql.planner.iterative.rule.RemoveUnsupportedDynamicFilters;
 import io.prestosql.sql.planner.iterative.rule.ReorderJoins;
+import io.prestosql.sql.planner.iterative.rule.ReplaceWindowWithRowNumber;
 import io.prestosql.sql.planner.iterative.rule.RewriteSpatialPartitioningAggregation;
 import io.prestosql.sql.planner.iterative.rule.SimplifyCountOverConstant;
 import io.prestosql.sql.planner.iterative.rule.SimplifyExpressions;
@@ -559,7 +564,18 @@ public class PlanOptimizers
                 columnPruningOptimizer, // Make sure to run this before index join. Filtered projections may not have all the columns.
                 new IndexJoinOptimizer(metadata), // Run this after projections and filters have been fully simplified and pushed down
                 new LimitPushDown(), // Run LimitPushDown before WindowFilterPushDown
-                new WindowFilterPushDown(metadata), // This must run after PredicatePushDown and LimitPushDown so that it squashes any successive filter nodes and limits
+                new IterativeOptimizer(
+                        ruleStats,
+                        statsCalculator,
+                        estimatedExchangesCostCalculator,
+                        SystemSessionProperties::useLegacyWindowFilterPushdown,
+                        ImmutableList.of(new WindowFilterPushDown(metadata)),
+                        ImmutableSet.of(
+                                new PushdownLimitThroughRowNumber(),
+                                new PushdownLimitThroughWindow(metadata),
+                                new PushdownFilterThroughRowNumber(metadata),
+                                new PushdownFilterThroughWindow(metadata),
+                                new ReplaceWindowWithRowNumber(metadata))),
                 new IterativeOptimizer(
                         ruleStats,
                         statsCalculator,
