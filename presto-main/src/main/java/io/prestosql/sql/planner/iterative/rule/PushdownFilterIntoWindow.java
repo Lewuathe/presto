@@ -54,7 +54,7 @@ import static io.prestosql.sql.planner.plan.Patterns.source;
 import static io.prestosql.sql.planner.plan.Patterns.window;
 import static java.lang.Math.toIntExact;
 
-public class PushdownFilterThroughWindow
+public class PushdownFilterIntoWindow
         implements Rule<FilterNode>
 {
     private final Capture<WindowNode> childCapture;
@@ -64,7 +64,7 @@ public class PushdownFilterThroughWindow
     private final DomainTranslator domainTranslator;
     private final FunctionId rowNumberFunctionId;
 
-    public PushdownFilterThroughWindow(Metadata metadata)
+    public PushdownFilterIntoWindow(Metadata metadata)
     {
         this.metadata = metadata;
         this.domainTranslator = new DomainTranslator(metadata);

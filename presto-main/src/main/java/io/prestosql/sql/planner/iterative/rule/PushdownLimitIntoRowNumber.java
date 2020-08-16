@@ -30,7 +30,7 @@ import static io.prestosql.sql.planner.plan.Patterns.rowNumber;
 import static io.prestosql.sql.planner.plan.Patterns.source;
 import static java.lang.Math.toIntExact;
 
-public class PushdownLimitThroughRowNumber
+public class PushdownLimitIntoRowNumber
         implements Rule<LimitNode>
 {
     private static final Capture<RowNumberNode> CHILD = newCapture();

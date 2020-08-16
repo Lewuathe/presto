@@ -37,7 +37,7 @@ import static io.prestosql.sql.planner.plan.Patterns.source;
 import static io.prestosql.sql.planner.plan.Patterns.window;
 import static java.lang.Math.toIntExact;
 
-public class PushdownLimitThroughWindow
+public class PushdownLimitIntoWindow
         implements Rule<LimitNode>
 {
     private final Capture<WindowNode> childCapture;
@@ -45,7 +45,7 @@ public class PushdownLimitThroughWindow
 
     private final FunctionId rowNumberFunctionId;
 
-    public PushdownLimitThroughWindow(Metadata metadata)
+    public PushdownLimitIntoWindow(Metadata metadata)
     {
         this.rowNumberFunctionId = metadata.resolveFunction(QualifiedName.of("row_number"), ImmutableList.of()).getFunctionId();
         this.childCapture = newCapture();

@@ -48,7 +48,7 @@ import static io.prestosql.sql.planner.plan.Patterns.rowNumber;
 import static io.prestosql.sql.planner.plan.Patterns.source;
 import static java.lang.Math.toIntExact;
 
-public class PushdownFilterThroughRowNumber
+public class PushdownFilterIntoRowNumber
         implements Rule<FilterNode>
 {
     private static final Capture<RowNumberNode> CHILD = newCapture();
@@ -56,7 +56,7 @@ public class PushdownFilterThroughRowNumber
     private final Metadata metadata;
     private final DomainTranslator domainTranslator;
 
-    public PushdownFilterThroughRowNumber(Metadata metadata)
+    public PushdownFilterIntoRowNumber(Metadata metadata)
     {
         this.metadata = metadata;
         this.domainTranslator = new DomainTranslator(metadata);

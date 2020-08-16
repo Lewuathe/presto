@@ -25,13 +25,13 @@ import java.util.Optional;
 import static io.prestosql.sql.planner.assertions.PlanMatchPattern.node;
 import static io.prestosql.sql.planner.iterative.rule.test.PlanBuilder.expression;
 
-public class TestPushdownFilterThroughRowNumber
+public class TestPushdownFilterIntoRowNumber
         extends BaseRuleTest
 {
     @Test
     public void testSourceRowNumber()
     {
-        tester().assertThat(new PushdownFilterThroughRowNumber(tester().getMetadata()))
+        tester().assertThat(new PushdownFilterIntoRowNumber(tester().getMetadata()))
                 .on(p -> {
                     Symbol rowNumberSymbol = p.symbol("row_number_1");
                     return p.filter(expression("row_number_1 < cast(100 as bigint)"),
@@ -44,7 +44,7 @@ public class TestPushdownFilterThroughRowNumber
     @Test
     public void testNoOutputsThroughRowNumber()
     {
-        tester().assertThat(new PushdownFilterThroughRowNumber(tester().getMetadata()))
+        tester().assertThat(new PushdownFilterIntoRowNumber(tester().getMetadata()))
                 .on(p -> {
                     Symbol rowNumberSymbol = p.symbol("row_number_1");
                     return p.filter(expression("row_number_1 < cast(-100 as bigint)"),

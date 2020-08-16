@@ -40,7 +40,7 @@ import static io.prestosql.sql.planner.assertions.PlanMatchPattern.node;
 import static io.prestosql.sql.tree.FrameBound.Type.CURRENT_ROW;
 import static io.prestosql.sql.tree.FrameBound.Type.UNBOUNDED_PRECEDING;
 
-public class TestPushdownLimitThroughWindow
+public class TestPushdownLimitIntoWindow
         extends BaseRuleTest
 {
     private static final WindowNode.Frame frame = new WindowNode.Frame(
@@ -56,7 +56,7 @@ public class TestPushdownLimitThroughWindow
     public void testLimitAboveWindow()
     {
         ResolvedFunction rowNumber = createWindowFunctionSignature(tester().getMetadata(), "row_number");
-        tester().assertThat(new PushdownLimitThroughWindow(tester().getMetadata()))
+        tester().assertThat(new PushdownLimitIntoWindow(tester().getMetadata()))
                 .on(p ->
                         p.limit(3, p.window(
                                 newWindowNodeSpecification(p, "a"),
@@ -69,7 +69,7 @@ public class TestPushdownLimitThroughWindow
     public void testConvertToTopNRowNumber()
     {
         ResolvedFunction rowNumber = createWindowFunctionSignature(tester().getMetadata(), "row_number");
-        tester().assertThat(new PushdownLimitThroughWindow(tester().getMetadata()))
+        tester().assertThat(new PushdownLimitIntoWindow(tester().getMetadata()))
                 .on(p ->
                         p.limit(3, p.window(
                                 newWindowNodeSpecificationWithoutPartition(p, "a"),

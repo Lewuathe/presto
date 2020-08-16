@@ -23,13 +23,13 @@ import java.util.Optional;
 
 import static io.prestosql.sql.planner.assertions.PlanMatchPattern.node;
 
-public class TestPushdownLimitThroughRowNumber
+public class TestPushdownLimitIntoRowNumber
         extends BaseRuleTest
 {
     @Test
     public void testLimitAboveRowNumber()
     {
-        tester().assertThat(new PushdownLimitThroughRowNumber())
+        tester().assertThat(new PushdownLimitIntoRowNumber())
                 .on(p ->
                         p.limit(3, p.rowNumber(ImmutableList.of(), Optional.of(5),
                                 p.symbol("row_number"), p.values(p.symbol("a")))))
@@ -39,7 +39,7 @@ public class TestPushdownLimitThroughRowNumber
     @Test
     public void testZeroLimit()
     {
-        tester().assertThat(new PushdownLimitThroughRowNumber())
+        tester().assertThat(new PushdownLimitIntoRowNumber())
                 .on(p ->
                         p.limit(0, p.rowNumber(ImmutableList.of(), Optional.of(5),
                                 p.symbol("row_number"), p.values(p.symbol("a")))))
@@ -49,7 +49,7 @@ public class TestPushdownLimitThroughRowNumber
     @Test
     public void testTiesLimit()
     {
-        tester().assertThat(new PushdownLimitThroughRowNumber())
+        tester().assertThat(new PushdownLimitIntoRowNumber())
                 .on(p ->
                         p.limit(0, ImmutableList.of(p.symbol("a")),
                                 p.rowNumber(ImmutableList.of(), Optional.of(5),

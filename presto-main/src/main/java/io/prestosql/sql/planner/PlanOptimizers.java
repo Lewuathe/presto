@@ -144,10 +144,10 @@ import io.prestosql.sql.planner.iterative.rule.PushTopNIntoTableScan;
 import io.prestosql.sql.planner.iterative.rule.PushTopNThroughOuterJoin;
 import io.prestosql.sql.planner.iterative.rule.PushTopNThroughProject;
 import io.prestosql.sql.planner.iterative.rule.PushTopNThroughUnion;
-import io.prestosql.sql.planner.iterative.rule.PushdownFilterThroughRowNumber;
-import io.prestosql.sql.planner.iterative.rule.PushdownFilterThroughWindow;
-import io.prestosql.sql.planner.iterative.rule.PushdownLimitThroughRowNumber;
-import io.prestosql.sql.planner.iterative.rule.PushdownLimitThroughWindow;
+import io.prestosql.sql.planner.iterative.rule.PushdownFilterIntoRowNumber;
+import io.prestosql.sql.planner.iterative.rule.PushdownFilterIntoWindow;
+import io.prestosql.sql.planner.iterative.rule.PushdownLimitIntoRowNumber;
+import io.prestosql.sql.planner.iterative.rule.PushdownLimitIntoWindow;
 import io.prestosql.sql.planner.iterative.rule.RemoveAggregationInSemiJoin;
 import io.prestosql.sql.planner.iterative.rule.RemoveDuplicateConditions;
 import io.prestosql.sql.planner.iterative.rule.RemoveEmptyDelete;
@@ -571,10 +571,10 @@ public class PlanOptimizers
                         SystemSessionProperties::useLegacyWindowFilterPushdown,
                         ImmutableList.of(new WindowFilterPushDown(metadata)),
                         ImmutableSet.of(
-                                new PushdownLimitThroughRowNumber(),
-                                new PushdownLimitThroughWindow(metadata),
-                                new PushdownFilterThroughRowNumber(metadata),
-                                new PushdownFilterThroughWindow(metadata),
+                                new PushdownLimitIntoRowNumber(),
+                                new PushdownLimitIntoWindow(metadata),
+                                new PushdownFilterIntoRowNumber(metadata),
+                                new PushdownFilterIntoWindow(metadata),
                                 new ReplaceWindowWithRowNumber(metadata))),
                 new IterativeOptimizer(
                         ruleStats,

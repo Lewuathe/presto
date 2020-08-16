@@ -41,7 +41,7 @@ import static io.prestosql.sql.planner.iterative.rule.test.PlanBuilder.expressio
 import static io.prestosql.sql.tree.FrameBound.Type.CURRENT_ROW;
 import static io.prestosql.sql.tree.FrameBound.Type.UNBOUNDED_PRECEDING;
 
-public class TestPushdownFilterThroughWindow
+public class TestPushdownFilterIntoWindow
         extends BaseRuleTest
 {
     private static final WindowNode.Frame frame = new WindowNode.Frame(
@@ -57,7 +57,7 @@ public class TestPushdownFilterThroughWindow
     public void testEliminateFilter()
     {
         ResolvedFunction rowNumber = createWindowFunctionSignature(tester().getMetadata(), "row_number");
-        tester().assertThat(new PushdownFilterThroughWindow(tester().getMetadata()))
+        tester().assertThat(new PushdownFilterIntoWindow(tester().getMetadata()))
                 .on(p -> {
                     Symbol rowNumberSymbol = p.symbol("row_number_1");
                     return p.filter(expression("row_number_1 < cast(100 as bigint)"), p.window(
@@ -72,7 +72,7 @@ public class TestPushdownFilterThroughWindow
     public void testNoOutputsThroughWindow()
     {
         ResolvedFunction rowNumber = createWindowFunctionSignature(tester().getMetadata(), "row_number");
-        tester().assertThat(new PushdownFilterThroughWindow(tester().getMetadata()))
+        tester().assertThat(new PushdownFilterIntoWindow(tester().getMetadata()))
                 .on(p -> {
                     Symbol rowNumberSymbol = p.symbol("row_number_1");
                     return p.filter(expression("row_number_1 < cast(-100 as bigint)"), p.window(

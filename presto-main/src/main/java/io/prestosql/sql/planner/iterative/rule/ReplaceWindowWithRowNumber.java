@@ -16,11 +16,8 @@ package io.prestosql.sql.planner.iterative.rule;
 import com.google.common.collect.ImmutableList;
 import io.prestosql.matching.Captures;
 import io.prestosql.matching.Pattern;
-import io.prestosql.metadata.FunctionId;
 import io.prestosql.metadata.Metadata;
-import io.prestosql.sql.planner.PlanNodeIdAllocator;
 import io.prestosql.sql.planner.iterative.Rule;
-import io.prestosql.sql.planner.plan.PlanNode;
 import io.prestosql.sql.planner.plan.RowNumberNode;
 import io.prestosql.sql.planner.plan.WindowNode;
 import io.prestosql.sql.tree.QualifiedName;
@@ -34,14 +31,12 @@ public class ReplaceWindowWithRowNumber
         implements Rule<WindowNode>
 {
     private final Pattern<WindowNode> pattern;
-    private final FunctionId rowNumberFunctionId;
 
     public ReplaceWindowWithRowNumber(Metadata metadata)
     {
-        this.rowNumberFunctionId = metadata.resolveFunction(QualifiedName.of("row_number"), ImmutableList.of()).getFunctionId();
         this.pattern = window()
-                .matching(window -> window.getWindowFunctions().size() == 1 && window.getOrderingScheme().isEmpty())
-                .matching(window -> getOnlyElement(window.getWindowFunctions().values()).getResolvedFunction().getFunctionId().equals(rowNumberFunctionId));
+                .matching(window -> window.getWindowFunctions().size() == 1 && getOnlyElement(window.getWindowFunctions().values()).getResolvedFunction().getFunctionId().equals(metadata.resolveFunction(QualifiedName.of("row_number"), ImmutableList.of()).getFunctionId()))
+                .matching(window -> window.getOrderingScheme().isEmpty());
     }
 
     @Override
@@ -53,11 +48,9 @@ public class ReplaceWindowWithRowNumber
     @Override
     public Result apply(WindowNode node, Captures captures, Context context)
     {
-        PlanNode source = node.getSource();
-        PlanNodeIdAllocator idAllocator = context.getIdAllocator();
-
-        return Result.ofPlanNode(new RowNumberNode(idAllocator.getNextId(),
-                source,
+        return Result.ofPlanNode(
+                new RowNumberNode(node.getId(),
+                node.getSource(),
                 node.getPartitionBy(),
                 false,
                 getOnlyElement(node.getWindowFunctions().keySet()),

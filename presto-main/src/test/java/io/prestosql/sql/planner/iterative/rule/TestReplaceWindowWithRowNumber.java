@@ -15,8 +15,8 @@ package io.prestosql.sql.planner.iterative.rule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import io.prestosql.metadata.Metadata;
 import io.prestosql.metadata.ResolvedFunction;
+import io.prestosql.sql.planner.Symbol;
 import io.prestosql.sql.planner.iterative.rule.test.BaseRuleTest;
 import io.prestosql.sql.planner.iterative.rule.test.PlanBuilder;
 import io.prestosql.sql.planner.plan.RowNumberNode;
@@ -40,38 +40,35 @@ import static io.prestosql.sql.tree.FrameBound.Type.UNBOUNDED_PRECEDING;
 public class TestReplaceWindowWithRowNumber
         extends BaseRuleTest
 {
-    private static final WindowNode.Frame frame = new WindowNode.Frame(
-            WindowFrame.Type.RANGE,
-            UNBOUNDED_PRECEDING,
-            Optional.empty(),
-            CURRENT_ROW,
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty());
-
     @Test
     public void test()
     {
-        ResolvedFunction rowNumber = createWindowFunctionSignature(tester().getMetadata(), "row_number");
+        ResolvedFunction rowNumber = tester().getMetadata().resolveFunction(QualifiedName.of("row_number"), fromTypes());
         tester().assertThat(new ReplaceWindowWithRowNumber(tester().getMetadata()))
-                .on(p ->
-                        p.window(
-                                newWindowNodeSpecification(p, "a"),
-                                ImmutableMap.of(p.symbol("row_number_1"), newWindowNodeFunction(rowNumber, "a")),
-                                p.values(p.symbol("a"))))
+                .on(p -> {
+                    Symbol a = p.symbol("a");
+                    Symbol rowNumber1 = p.symbol("row_number_1");
+                    return p.window(
+                            newWindowNodeSpecification(p, a.getName()),
+                            ImmutableMap.of(rowNumber1, newWindowNodeFunction(rowNumber, a.getName())),
+                            p.values(a));
+                })
                 .matches(node(RowNumberNode.class, node(ValuesNode.class)));
     }
 
     @Test
     public void testDoNotFire()
     {
-        ResolvedFunction rank = createWindowFunctionSignature(tester().getMetadata(), "rank");
+        ResolvedFunction rank = tester().getMetadata().resolveFunction(QualifiedName.of("rank"), fromTypes());
         tester().assertThat(new ReplaceWindowWithRowNumber(tester().getMetadata()))
-                .on(p ->
-                        p.window(
-                                newWindowNodeSpecification(p, "a"),
-                                ImmutableMap.of(p.symbol("rank_1"), newWindowNodeFunction(rank, "a")),
-                                p.values(p.symbol("a"))))
+                .on(p -> {
+                    Symbol a = p.symbol("a");
+                    Symbol rank1 = p.symbol("rank_1");
+                    return p.window(
+                                newWindowNodeSpecification(p, a.getName()),
+                                ImmutableMap.of(rank1, newWindowNodeFunction(rank, a.getName())),
+                                p.values(a));
+                })
                 .doesNotFire();
     }
 
@@ -85,12 +82,14 @@ public class TestReplaceWindowWithRowNumber
         return new WindowNode.Function(
                 resolvedFunction,
                 Arrays.stream(symbols).map(SymbolReference::new).collect(Collectors.toList()),
-                frame,
+                new WindowNode.Frame(
+                        WindowFrame.Type.RANGE,
+                        UNBOUNDED_PRECEDING,
+                        Optional.empty(),
+                        CURRENT_ROW,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()),
                 false);
-    }
-
-    private static ResolvedFunction createWindowFunctionSignature(Metadata metadata, String name)
-    {
-        return metadata.resolveFunction(QualifiedName.of(name), fromTypes());
     }
 }
