@@ -18,8 +18,6 @@ import com.google.common.collect.ImmutableMap;
 import io.prestosql.metadata.ResolvedFunction;
 import io.prestosql.sql.planner.Symbol;
 import io.prestosql.sql.planner.iterative.rule.test.BaseRuleTest;
-import io.prestosql.sql.planner.iterative.rule.test.PlanBuilder;
-import io.prestosql.sql.planner.plan.RowNumberNode;
 import io.prestosql.sql.planner.plan.ValuesNode;
 import io.prestosql.sql.planner.plan.WindowNode;
 import io.prestosql.sql.tree.QualifiedName;
@@ -31,9 +29,9 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static io.prestosql.spi.type.BigintType.BIGINT;
 import static io.prestosql.sql.analyzer.TypeSignatureProvider.fromTypes;
 import static io.prestosql.sql.planner.assertions.PlanMatchPattern.node;
+import static io.prestosql.sql.planner.assertions.PlanMatchPattern.rowNumber;
 import static io.prestosql.sql.tree.FrameBound.Type.CURRENT_ROW;
 import static io.prestosql.sql.tree.FrameBound.Type.UNBOUNDED_PRECEDING;
 
@@ -49,11 +47,13 @@ public class TestReplaceWindowWithRowNumber
                     Symbol a = p.symbol("a");
                     Symbol rowNumber1 = p.symbol("row_number_1");
                     return p.window(
-                            newWindowNodeSpecification(p, a.getName()),
+                            new WindowNode.Specification(ImmutableList.of(a), Optional.empty()),
                             ImmutableMap.of(rowNumber1, newWindowNodeFunction(rowNumber, a.getName())),
                             p.values(a));
                 })
-                .matches(node(RowNumberNode.class, node(ValuesNode.class)));
+                .matches(rowNumber(
+                        pattern -> pattern.maxRowCountPerPartition(Optional.empty()),
+                        node(ValuesNode.class)));
     }
 
     @Test
@@ -65,16 +65,11 @@ public class TestReplaceWindowWithRowNumber
                     Symbol a = p.symbol("a");
                     Symbol rank1 = p.symbol("rank_1");
                     return p.window(
-                                newWindowNodeSpecification(p, a.getName()),
+                            new WindowNode.Specification(ImmutableList.of(a), Optional.empty()),
                                 ImmutableMap.of(rank1, newWindowNodeFunction(rank, a.getName())),
                                 p.values(a));
                 })
                 .doesNotFire();
-    }
-
-    private static WindowNode.Specification newWindowNodeSpecification(PlanBuilder planBuilder, String symbolName)
-    {
-        return new WindowNode.Specification(ImmutableList.of(planBuilder.symbol(symbolName, BIGINT)), Optional.empty());
     }
 
     private static WindowNode.Function newWindowNodeFunction(ResolvedFunction resolvedFunction, String... symbols)
